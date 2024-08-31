@@ -1,4 +1,4 @@
-#include "../analyzer/analyzer.h"
+#include "analyzer.h"
 #include "../helpers/analyzer_helper.h"
 #include "../helpers/utils.h"
 #include <assert.h>
