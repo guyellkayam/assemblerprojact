@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "symbol_table.h": "c"
-    }
+        "symbol_table.h": "c",
+        "utils.h": "c",
+        "assembler.h": "c",
+        "analyzer.h": "c"
+    },
+    "makefile.configureOnOpen": true
 }

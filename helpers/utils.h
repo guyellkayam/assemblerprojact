@@ -1,17 +1,28 @@
-#ifndef UTILS
-#define UTILS
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+
 #define COMMENT_PREFIX ';'
 #define MAX_LINE_LENGTH 81
-#define MAX_FILE_NAME_LENGTH 200
+#define MAX_FILE_NAME_LENGTH 256
 #define MAX_LABEL_LENGTH 31
 #define MAX_OPERAND_LENGTH 31
 #define FOUR_CHARS_INDENTATION 4
-#define MACRO_DEF_STR_LENGTH 4
+/* #define MACRO_DEF_STR_LENGTH 5 */
 #define TRUE 1
 #define FALSE 0
 #define DOT_AM_SUFFIX ".am"
+#define DOT_OB_SUFFIX ".ob"
+#define DOT_ENT_SUFFIX ".ent"
+#define DOT_EXT_SUFFIX ".ext"
+#define WORD_SIZE 15
+#define MEMORY_SIZE 4096
+#define BASE_ADDRESS 100
+#define MACRO_DEF_STR_LENGTH 31  /* Define the macro here */
 
 /**
  * @brief Removes all white spaces from the source_line and saves the result in dest_line.
@@ -71,6 +82,14 @@ void print_terminal_decimal_to_binary(int decimal);
 void print_file_decimal_to_binary(int decimal, FILE * output_file);
 
 /**
+ * @brief Print to an output file a decimal number in octal base (5 digits).
+ * 
+ * @param decimal The decimal number to print in octal base.
+ * @param output_file The file to print to.
+ */
+void print_file_decimal_to_octal(int decimal, FILE *output_file);
+
+/**
  * @brief Remove a filename suffix.
  * 
  * @param src_filename The original filename with the suffix.
@@ -78,5 +97,13 @@ void print_file_decimal_to_binary(int decimal, FILE * output_file);
  * @param suffix The suffix to remove.
  */
 void remove_suffix(const char* src_filename, char* dest_filename, const char* suffix); 
+
+/**
+ * @brief Check if a string is a valid label.
+ *
+ * @param str The string to check.
+ * @return TRUE (1) if the string is a valid label, FALSE (0) otherwise.
+ */
+int is_valid_label(const char *str);
 
 #endif /* UTILS_H */ 

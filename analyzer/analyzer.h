@@ -65,7 +65,7 @@ typedef struct Analyzed_line
             enum /* 16 opcodes */
             {
                 /* Require 2 operands */
-                inst_mov = 0,
+                inst_mov,
                 inst_cmp,
                 inst_add,
                 inst_sub,
@@ -93,7 +93,9 @@ typedef struct Analyzed_line
                 operand_none = 0,
                 operand_const_number = 1,
                 operand_label = 2,
-                operand_register = 3
+                operand_register = 3,
+                operand_register_indirect = 4,
+                operand_label_indirect = 5
 
             } inst_operand_options[2];
 

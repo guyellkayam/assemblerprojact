@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define COMMENT_PREFIX ';'
-#define MACRO_DEF_STR_LENGTH 5 // Length of "mcro "
-
-/* Checks if the given line is a macro definition. */
 int is_macro_def(char *line)
 {
     char clean_line[MAX_LINE_LENGTH];
@@ -17,7 +13,6 @@ int is_macro_def(char *line)
     return strncmp(clean_line, "mcro ", 5) == 0;
 }
 
-/* Checks if the given line is a macro call. */
 int is_macro_call(Macro *macro, char *line)
 {
     char clean_line[MAX_LINE_LENGTH];
@@ -34,14 +29,15 @@ int is_macro_call(Macro *macro, char *line)
     return 0;
 }
 
-/* Deploys a macro by writing its lines to the output file. */
 void deploy_macro(FILE *output_file, Macro *macro, char *line)
 {
     int i;
     char macro_name[MAX_LINE_LENGTH];
+    Macro *macro_to_deploy;
+
     remove_white_spaces(line, macro_name);
 
-    Macro *macro_to_deploy = get_macro(macro, macro_name);
+    macro_to_deploy = get_macro(macro, macro_name);
     if (macro_to_deploy != NULL)
     {
         for (i = 0; i < macro_to_deploy->num_of_lines; i++)
@@ -53,7 +49,6 @@ void deploy_macro(FILE *output_file, Macro *macro, char *line)
     }
 }
 
-/* Checks the type of the input line. */
 enum line_type get_line_type(Macro *macro, char *line)
 {
     char clean_line[MAX_LINE_LENGTH];
@@ -77,13 +72,14 @@ enum line_type get_line_type(Macro *macro, char *line)
     return any_other_line;
 }
 
-/* Gets the macro name from a macro definition line. */
 char *get_macro_name_from_line(char *line)
 {
     char clean_line[MAX_LINE_LENGTH];
+    char *macro_name;
+
     remove_white_spaces(line, clean_line);
 
-    char *macro_name = (char *)malloc(MAX_LINE_LENGTH);
+    macro_name = (char *)malloc(MAX_LINE_LENGTH);
     if (macro_name == NULL)
     {
         printf("Error allocating memory for macro_name in get_macro_name_from_line.\n");
@@ -94,8 +90,6 @@ char *get_macro_name_from_line(char *line)
     return macro_name;
 }
 
-/* Processes the input file ".as" and creates an ".am" output file.
- * The output file will contain the expanded macros and other lines as they appear in the input file. */
 char *process_as_file(char *filename)
 {
     FILE *input_file;
@@ -106,29 +100,36 @@ char *process_as_file(char *filename)
     char line[MAX_LINE_LENGTH];
     char input_filename[MAX_FILE_NAME_LENGTH];
     char output_filename[MAX_FILE_NAME_LENGTH];
+    char *result_filename;
+    enum line_type current_line_type;
+
+    printf("Processing file: %s\n", filename);
 
     snprintf(input_filename, sizeof(input_filename), "%s.as", filename);
     snprintf(output_filename, sizeof(output_filename), "%s.am", filename);
 
+    printf("Attempting to open input file: %s\n", input_filename);
     input_file = fopen(input_filename, "r");
     if (input_file == NULL)
     {
-        printf("Error opening the input file.\n");
+        perror("Error opening the input file");
         return NULL;
     }
 
+    printf("Attempting to open output file: %s\n", output_filename);
     output_file = fopen(output_filename, "w");
     if (output_file == NULL)
     {
-        printf("Error opening the output file.\n");
+        perror("Error opening the output file");
         fclose(input_file);
         return NULL;
     }
 
-    /* Analyze each line and perform the relevant action */
+    printf("Successfully opened both input and output files.\n");
+
     while (fgets(line, sizeof(line), input_file) != NULL)
     {
-        enum line_type current_line_type = get_line_type(macro_table, line);
+        current_line_type = get_line_type(macro_table, line);
 
         if (current_line_type == blank || current_line_type == comment)
         {
@@ -167,7 +168,7 @@ char *process_as_file(char *filename)
     fclose(output_file);
     free_macro_table(macro_table);
 
-    char *result_filename = strdup(output_filename);
+    result_filename = strdup(output_filename);
     if (result_filename == NULL)
     {
         printf("Memory allocation failed for result_filename.\n");

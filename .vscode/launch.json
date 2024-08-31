@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "analyzer.c deubg",
+            "name": "assemblerr.c deubg",
             "type": "cppdbg",
             "request": "launch",
-            "program": "enter program name, for example ${workspaceFolder}/analyzerh.out",
+            "program": "enter program name, for example ${workspaceFolder}/assembler.out",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

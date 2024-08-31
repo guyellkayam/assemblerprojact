@@ -2,6 +2,7 @@
 #define ASSEMBLER_HELPER_H
 
 #include "../assembler/assembler.h"
+#include "../helpers/utils.h"  /* Add this to ensure BASE_ADDRESS is consistently defined */
 
 /**
  * @brief Set extra word for instruction based on the operand type.
@@ -28,5 +29,6 @@ void assembler_warning(int line_index, const char *message);
  * @param message A message describing the error.
  */
 void assembler_error(int line_index, const char *message);
+
 
 #endif /* ASSEMBLER_HELPER_H */ 

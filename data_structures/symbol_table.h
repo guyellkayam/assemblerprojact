@@ -9,12 +9,12 @@
 
 /* Define the SymbolType enumeration */
 typedef enum {
-    SYMBOL_LOCAL_CODE,
-    SYMBOL_LOCAL_DATA,
-    SYMBOL_EXTERN_DEF,
-    SYMBOL_ENTRY_DEF,
-    SYMBOL_ENTRY_CODE,
-    SYMBOL_ENTRY_DATA
+    symbol_entry_def,
+    symbol_entry_data,
+    symbol_entry_code,
+    symbol_local_data,
+    symbol_local_code,
+    symbol_extern_def
 } SymbolType;
 
 typedef struct Symbol
@@ -25,17 +25,6 @@ typedef struct Symbol
     SymbolType symbol_opt; /* Use SymbolType here */
     struct Symbol *next_symbol;
 } Symbol;
-
-/**
- * @brief Create a new symbol node.
- * 
- * @param symbol_name The name of the Symbol.
- * @param def_line The definition line of the Symbol.
- * @param symbol_opt The type of the symbol.
- * @param address The address of the label.
- * @return Pointer to the newly created Symbol Node.
- */
-Symbol *create_symbol(const char *symbol_name, unsigned int def_line, SymbolType symbol_opt, unsigned int *address);
 
 /**
  * @brief Inserts a new symbol into the symbol table.
