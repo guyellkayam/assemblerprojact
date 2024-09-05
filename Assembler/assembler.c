@@ -1,4 +1,3 @@
-/* assembler.c */
 #include "assembler.h"
 #include "../helpers/assembler_helper.h"
 #include "../file_builder/file_builder.h"
@@ -7,13 +6,95 @@
 
 unsigned int encode_first_word(int opcode, int src_addr, int dest_addr) {
     unsigned int word = 0;
-    word |= (opcode & 0x3F) << 10;
-    word |= (src_addr & 0x3) << 8;
-    word |= (dest_addr & 0x3) << 6;
-    word |= 0x4;
+    word |= (opcode & 0x3F) << 6;
+    word |= (src_addr & 0x3) << 4;
+    word |= (dest_addr & 0x3) << 2;
+    /* ARE bits are set to 00 by default */
     printf("Debug: Encoding first word - opcode: %d, src_addr: %d, dest_addr: %d\n", opcode, src_addr, dest_addr);
     printf("Debug: Encoded first word: %05o\n", word);
     return word;
+}
+
+/* Encoding for register operands */
+unsigned int encode_register(int reg_num) {
+    return (reg_num & 0x7) << 2;
+}
+
+/* Encoding for immediate values */
+unsigned int encode_immediate(int value) {
+    return (value & 0xFFFF) << 2;  /* Allow for 16-bit values */
+}
+
+/* Encoding for addressing modes */
+unsigned int encode_addressing_mode(int mode, int value) {
+    unsigned int encoded = mode << 2;
+    encoded |= value & 0x3;
+    return encoded;
+}
+
+/* Specific instruction encodings */
+unsigned int encode_add(int src, int dest) {
+    return encode_first_word(2, src, dest);
+}
+
+unsigned int encode_sub(int src, int dest) {
+    return encode_first_word(3, src, dest);
+}
+
+unsigned int encode_mov(int src, int dest) {
+    return encode_first_word(0, src, dest);
+}
+
+unsigned int encode_cmp(int src, int dest) {
+    return encode_first_word(1, src, dest);
+}
+
+unsigned int encode_lea(int src, int dest) {
+    return encode_first_word(4, src, dest);
+}
+
+unsigned int encode_clr(int dest) {
+    return encode_first_word(6, 0, dest);
+}
+
+unsigned int encode_not(int dest) {
+    return encode_first_word(5, 0, dest);
+}
+
+unsigned int encode_inc(int dest) {
+    return encode_first_word(7, 0, dest);
+}
+
+unsigned int encode_dec(int dest) {
+    return encode_first_word(8, 0, dest);
+}
+
+unsigned int encode_jmp(int dest) {
+    return encode_first_word(9, 0, dest);
+}
+
+unsigned int encode_bne(int dest) {
+    return encode_first_word(10, 0, dest);
+}
+
+unsigned int encode_jsr(int dest) {
+    return encode_first_word(13, 0, dest);
+}
+
+unsigned int encode_red(int dest) {
+    return encode_first_word(11, 0, dest);
+}
+
+unsigned int encode_prn(int dest) {
+    return encode_first_word(12, 0, dest);
+}
+
+unsigned int encode_rts(void) {
+    return encode_first_word(14, 0, 0);
+}
+
+unsigned int encode_stop(void) {
+    return encode_first_word(15, 0, 0);
 }
 
 Object_File first_move(FILE *am_file, const char *am_filename)
@@ -26,8 +107,8 @@ Object_File first_move(FILE *am_file, const char *am_filename)
     Compiled_Line *current_compiled_line = NULL;
     Symbol *symbol = NULL;
     Symbol *temp_symbol = NULL;
-    Symbol *entry_calls = NULL;
-    Object_File object_file;
+    Symbol *entry_symbols = NULL;
+    Object_File object_file = {0};  /* Initialize all fields to 0 or NULL */
     unsigned int address = BASE_ADDRESS;
     int line_index = 1;
     unsigned int inst_word = 0;
@@ -74,12 +155,11 @@ Object_File first_move(FILE *am_file, const char *am_filename)
             if (analyzed_line.dir_or_inst.directive.dir_opt == dir_entry || analyzed_line.dir_or_inst.directive.dir_opt == dir_extern)
             {
                 if (analyzed_line.dir_or_inst.directive.dir_opt == dir_entry) {
-                    Symbol *existing_symbol = get_symbol(symbol, analyzed_line.dir_or_inst.directive.dir_operand.string);
-                    if (existing_symbol != NULL) {
-                        existing_symbol->symbol_opt = symbol_entry_def;
-                    } else {
-                        symbol = insert_symbol_to_table(symbol, analyzed_line.dir_or_inst.directive.dir_operand.string, line_index, symbol_entry_def, NULL);
-                    }
+                    entry_symbols = insert_symbol_to_table(entry_symbols, 
+                        analyzed_line.dir_or_inst.directive.dir_operand.string, 
+                        line_index, 
+                        symbol_entry_def, 
+                        NULL);
                 }
                 else if (analyzed_line.dir_or_inst.directive.dir_opt == dir_extern)
                 {
@@ -135,8 +215,7 @@ Object_File first_move(FILE *am_file, const char *am_filename)
                                                   analyzed_line.dir_or_inst.instruction.inst_operand_options[0],
                                                   analyzed_line.dir_or_inst.instruction.inst_operand_options[1]);
                     insert_word(current_compiled_line, inst_word, &address);
-                    set_inst_extra_words(&analyzed_line, current_compiled_line, 2, &address);
-                    code_word_count += 2;
+                    set_inst_extra_words(&analyzed_line, current_compiled_line, 2, &address, &code_word_count);
                     break;
                 case inst_not:
                 case inst_clr:
@@ -150,8 +229,7 @@ Object_File first_move(FILE *am_file, const char *am_filename)
                     inst_word = encode_first_word(analyzed_line.dir_or_inst.instruction.inst_opt, 0,
                                                   analyzed_line.dir_or_inst.instruction.inst_operand_options[0]);
                     insert_word(current_compiled_line, inst_word, &address);
-                    set_inst_extra_words(&analyzed_line, current_compiled_line, 1, &address);
-                    code_word_count += 1;
+                    set_inst_extra_words(&analyzed_line, current_compiled_line, 1, &address, &code_word_count);
                     break;
                 case inst_rts:
                 case inst_stop:
@@ -171,15 +249,26 @@ Object_File first_move(FILE *am_file, const char *am_filename)
         printf("Debug: Processed line %d, current address: %u\n", line_index, address);
     } 
 
-    entry_calls = get_entry_calls(symbol, entry_calls);
     object_file.code_section = code_section;
     object_file.data_section = data_section;
     object_file.symbol_table = symbol;
-    object_file.entry_calls = entry_calls;
+    object_file.entry_symbols = entry_symbols;
     object_file.code_word_count = code_word_count;
     object_file.data_word_count = data_word_count;
 
     return object_file;
+}
+
+void update_entry_addresses(Object_File *object_file)
+{
+    Symbol *entry = object_file->entry_symbols;
+    while (entry != NULL) {
+        Symbol *defined_symbol = get_symbol(object_file->symbol_table, entry->symbol_name);
+        if (defined_symbol != NULL) {
+            entry->address = defined_symbol->address;
+        }
+        entry = entry->next_symbol;
+    }
 }
 
 Object_File second_move(Object_File object_file)
@@ -189,6 +278,7 @@ Object_File second_move(Object_File object_file)
     Compiled_Line *current_section = object_file.code_section;
     unsigned int symbol_address;
     unsigned int extern_address;
+    Symbol *existing_extern;
 
     while (current_section != NULL) 
     {
@@ -203,11 +293,34 @@ Object_File second_move(Object_File object_file)
                     {
                         symbol_address = 1;
                         extern_address = current_section->begin_address + i;
-                        extern_calls = insert_symbol_to_table(extern_calls, 
-                                                            current_section->missing_label[i], 
-                                                            current_section->line_index, 
-                                                            symbol_extern_def, 
-                                                            &extern_address);
+                        
+                        /* Check if this external symbol already exists in extern_calls */
+                        existing_extern = get_symbol(extern_calls, current_section->missing_label[i]);
+                        
+                        if (existing_extern == NULL)
+                        {
+                            /* Create a new symbol for the first occurrence of this external reference */
+                            extern_calls = insert_symbol_to_table(extern_calls, 
+                                                                  current_section->missing_label[i], 
+                                                                  current_section->line_index, 
+                                                                  symbol_extern_def, 
+                                                                  &extern_address);
+                        }
+                        else
+                        {
+                            /* Update the existing symbol with the new address */
+                            Symbol *new_occurrence = create_symbol(current_section->missing_label[i], 
+                                                                   current_section->line_index, 
+                                                                   symbol_extern_def, 
+                                                                   &extern_address);
+                            /* Append the new occurrence to the end of the list */
+                            while (existing_extern->next_symbol != NULL)
+                            {
+                                existing_extern = existing_extern->next_symbol;
+                            }
+                            existing_extern->next_symbol = new_occurrence;
+                        }
+                        
                         printf("Debug: External symbol %s used at address %u\n", current_section->missing_label[i], extern_address);
                     }
                     else
@@ -225,6 +338,7 @@ Object_File second_move(Object_File object_file)
         current_section = current_section->next_compiled_line;
     }
 
+    update_entry_addresses(&object_file);
     object_file.extern_calls = extern_calls;
     return object_file;
 }
@@ -244,11 +358,11 @@ int assembler(FILE *am_file, const char *am_filename)
     object_file = second_move(object_file);
     printf("Debug: Second move completed\n");
 
-    if (object_file.entry_calls != NULL)
+    if (object_file.entry_symbols != NULL)
     {
         printf("Debug: Creating .ent file\n");
         remove_suffix(am_filename, entry_filename, DOT_AM_SUFFIX);
-        build_entry_file(entry_filename, object_file.entry_calls);
+        build_entry_file(entry_filename, object_file.entry_symbols);
         printf("Debug: .ent file creation attempt completed\n");
     }
     else
@@ -273,9 +387,10 @@ int assembler(FILE *am_file, const char *am_filename)
                   object_file.code_word_count, object_file.data_word_count);
 
     free_symbol_table(object_file.symbol_table);
+    free_symbol_table(object_file.entry_symbols);
     free_compiled_line_table(object_file.data_section);
     free_compiled_line_table(object_file.code_section);
-    /* Note: entry_calls and extern_calls are freed in their respective build functions */
+    /* Note: extern_calls are freed in their respective build functions */
 
     return TRUE;
 } 

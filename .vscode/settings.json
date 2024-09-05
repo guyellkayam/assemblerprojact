@@ -3,7 +3,8 @@
         "symbol_table.h": "c",
         "utils.h": "c",
         "assembler.h": "c",
-        "analyzer.h": "c"
+        "analyzer.h": "c",
+        "compiled_line.h": "c"
     },
     "makefile.configureOnOpen": true
 }

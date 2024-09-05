@@ -12,7 +12,7 @@
 #define SRC_INDENTATION 9
 #define OPCODE_INDENTATION 5
 #define DEST_REG_INDENTATION 2
-#define SRC_REG_INDENTATION 7
+#define SRC_REG_INDENTATION 8
 
 #define MEMORY_SIZE 4096
 #define BASE_ADDRESS 100
@@ -28,6 +28,7 @@ typedef struct Object_File
     Symbol * extern_calls;           /* Table for external calls */
     unsigned int code_word_count;    /* Number of words in the code section */
     unsigned int data_word_count;    /* Number of words in the data section */
+    Symbol *entry_symbols;  /* New field to track entry symbols */
 } Object_File;
 
 Object_File first_move(FILE * am_file, const char * am_filename);
@@ -36,8 +37,11 @@ int assembler(FILE * am_file, const char * am_filename);
 Symbol* get_symbol(Symbol* symbol_table, const char* symbol_name);
 Symbol* insert_symbol_to_table(Symbol* symbol, const char* symbol_name, unsigned int def_line, SymbolType symbol_opt, unsigned int* address);
 unsigned int encode_first_word(int opcode, int src_addr, int dest_addr);
-void set_inst_extra_words(const Analyzed_line *analyzed_line, Compiled_Line *compiled_line, int num_operands, unsigned int *address);
+void set_inst_extra_words(const Analyzed_line *analyzed_line, Compiled_Line *compiled_line, 
+                          int num_operands, unsigned int *address, unsigned int *code_word_count);
+void update_entry_addresses(Object_File *object_file);
+
+
+
 
 #endif /* ASSEMBLER_H */ 
- 
-

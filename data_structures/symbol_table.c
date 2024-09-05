@@ -1,3 +1,4 @@
+
 #include "symbol_table.h"
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +6,7 @@
 
 /* Creates symbol Node */
 /* Creates symbol Node */
-Symbol * create_symbol(const char *symbol_name, unsigned int def_line, SymbolType symbol_opt, unsigned int *address)
+Symbol *create_symbol(const char *symbol_name, unsigned int def_line, SymbolType symbol_opt, unsigned int *address)
 {
     Symbol *symbol = (Symbol *)calloc(1, sizeof(Symbol));
     if (symbol == NULL)

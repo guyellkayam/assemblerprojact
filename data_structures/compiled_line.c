@@ -72,7 +72,7 @@ void insert_word(Compiled_Line *compiled_line, unsigned int word, unsigned int *
             exit(EXIT_FAILURE);
         }
     }
-    compiled_line->words[compiled_line->num_of_words++] = word;
+    compiled_line->words[compiled_line->num_of_words++] = word & 0xFFF;
     compiled_line->end_address = *address;
     (*address)++;
 }

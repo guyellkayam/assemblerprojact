@@ -11,8 +11,10 @@
  * @param compiled_line The compiled_line structure to which the extra word will be written.
  * @param num_of_operands Number of operands for the instruction.
  * @param address Pointer to the current address for inserting words.
+ * @param code_word_count Pointer to the count of code words, to be incremented as words are added.
  */
-void set_inst_extra_words(const Analyzed_line *analyzed_line, Compiled_Line *compiled_line, int num_of_operands, unsigned int *address);
+void set_inst_extra_words(const Analyzed_line *analyzed_line, Compiled_Line *compiled_line, 
+                          int num_of_operands, unsigned int *address, unsigned int *code_word_count);
 
 /**
  * @brief Generate assembler warning.
@@ -29,6 +31,9 @@ void assembler_warning(int line_index, const char *message);
  * @param message A message describing the error.
  */
 void assembler_error(int line_index, const char *message);
+
+void set_inst_extra_words(const Analyzed_line *analyzed_line, Compiled_Line *compiled_line, 
+                          int num_of_operands, unsigned int *address, unsigned int *code_word_count);
 
 
 #endif /* ASSEMBLER_HELPER_H */ 

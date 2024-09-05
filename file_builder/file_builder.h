@@ -13,6 +13,7 @@
  * 
  * @param entry_filename The base filename without the '.am' suffix.
  * @param entry_table Table with all the entries definitions' lines.
+ * @return int Returns 1 on success, 0 on failure.
  */
 int build_entry_file(char *entry_filename, Symbol *entry_table);
 

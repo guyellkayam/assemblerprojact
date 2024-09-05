@@ -378,7 +378,9 @@ void set_instruction(char *line, Analyzed_line *analyzed_line) {
             free(inst_content);
             return;
         }
+        printf("Debug: Setting operand 1: %s\n", operand1);
         set_inst_operand(operand1, analyzed_line, 0);
+        printf("Debug: Setting operand 2: %s\n", operand2);
         set_inst_operand(operand2, analyzed_line, 1);
         printf("Debug: Two operands set - Op1: %s, Op2: %s\n", operand1, operand2);
     } else if (num_operands == SINGLE_OPERAND) {
@@ -438,4 +440,3 @@ Analyzed_line analyze_line(char *line)
 Analyzed_line get_analyzed_line(char *line) {
     return analyze_line(line);
 } 
-

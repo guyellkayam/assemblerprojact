@@ -19,7 +19,7 @@ int build_entry_file(char *entry_filename, Symbol *entry_table)
 
     while (entry_table != NULL)
     {
-        if (entry_table->symbol_opt == symbol_entry_def)
+        if (entry_table->symbol_opt == symbol_entry_def && entry_table->address != 0)
         {
             fprintf(entry_file, "%s %d\n", entry_table->symbol_name, entry_table->address);
             printf("Debug: Writing entry: %s %d\n", entry_table->symbol_name, entry_table->address);
@@ -36,17 +36,9 @@ void build_extern_file(char *extern_filename, Symbol *extern_table)
 {
     FILE *extern_file;
     char full_filename[MAX_FILE_NAME_LENGTH];
-    size_t filename_length;
+    Symbol *current;
 
-    filename_length = strlen(extern_filename);
-    if (filename_length + strlen(DOT_EXT_SUFFIX) >= MAX_FILE_NAME_LENGTH)
-    {
-        fprintf(stderr, "Filename too long for extern file\n");
-        return;
-    }
-
-    strncpy(full_filename, extern_filename, MAX_FILE_NAME_LENGTH - strlen(DOT_EXT_SUFFIX) - 1);
-    strcat(full_filename, DOT_EXT_SUFFIX);
+    snprintf(full_filename, sizeof(full_filename), "%s%s", extern_filename, DOT_EXT_SUFFIX);
 
     extern_file = fopen(full_filename, "w");
     if (extern_file == NULL)
@@ -55,14 +47,22 @@ void build_extern_file(char *extern_filename, Symbol *extern_table)
         return;
     }
 
-    while (extern_table != NULL)
+    current = extern_table;
+    while (current != NULL)
     {
-        fprintf(extern_file, "%s %d\n", extern_table->symbol_name, extern_table->address);
-        printf("Debug: Writing extern: %s %d\n", extern_table->symbol_name, extern_table->address);
-        extern_table = extern_table->next_symbol;
+        /* Write all addresses for the current symbol */
+        do
+        {
+            fprintf(extern_file, "%s %d\n", current->symbol_name, current->address);
+            printf("Debug: Writing extern: %s %d\n", current->symbol_name, current->address);
+            current = current->next_symbol;
+        } while (current != NULL && strcmp(current->symbol_name, extern_table->symbol_name) == 0);
+
+        extern_table = current;
     }
 
     fclose(extern_file);
+    printf("Successfully created extern file: %s\n", full_filename);
 }
 
 void build_ob_file(char *ob_filename, Compiled_Line *code_section, Compiled_Line *data_section, 
